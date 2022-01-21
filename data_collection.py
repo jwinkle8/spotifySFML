@@ -1,7 +1,4 @@
 import csv
-import sys
-import spotipy
-import spotipy.util as util
 
 def write_songs(sp):
 
@@ -35,19 +32,3 @@ def write_songs(sp):
                 song_num += 1
 
     songs_file.close()
-
-if __name__ == '__main__':
-    scope = 'user-library-read'
-
-    if len(sys.argv) > 1:
-        username = sys.argv[1]
-    else:
-        print("Usage: %s username" % (sys.argv[0],))
-        sys.exit()
-
-    token = util.prompt_for_user_token(username, scope)
-
-    if token:
-        write_songs(spotipy.Spotify(auth=token))
-    else:
-        print("Can't get token for", username)
