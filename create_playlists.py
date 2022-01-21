@@ -1,7 +1,7 @@
 import spotipy as sp
 import spotipy.util as util
 
-def fill_playlists(song_data, labels, user_id, token):
+def fill_playlists(labels, user_id, token):
 
     spotify = sp.Spotify(auth=token)
 
