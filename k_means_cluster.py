@@ -1,7 +1,9 @@
+import clustering_helpers
+import create_playlists
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns; sns.set()  # for plot styling
+import seaborn as sns; sns.set()  
 from sklearn.metrics import pairwise_distances_argmin
 
 
@@ -34,18 +36,45 @@ def find_clusters(X, n_clusters, rseed=2):
     return centers, labels
 
 
-if __name__ == "__main__":
+def cluster_songs(token, username):
 
     song_data = read_songs()
 
-    col1 = song_data[:,4][1:]
-    col2 = song_data[:,7][1:]
-    X = np.column_stack((col1, col2)).astype(float)
+    headers = song_data[0]
+    feature_pairs = clustering_helpers.get_all_feature_pairs()
+
+    errors = []
+
+    for rseed in range(11):
+        for pair in feature_pairs:
+
+            col1 = np.array(song_data[:,pair[0]][1:]).astype(float)
+            col2 = np.array(song_data[:,pair[1]][1:]).astype(float)
+
+            clustering_helpers.normalize_feature_statistics(col1)
+            clustering_helpers.normalize_feature_statistics(col2)
+
+            X = np.column_stack((col1, col2))
+
+            centers, labels = find_clusters(X, 4, rseed)
+
+            errors.append(clustering_helpers.compute_error(X, centers, labels))
+
+    min_pair = feature_pairs[errors.index(min(errors)) % 10]
+    rseed = errors.index(min(errors)) // 10
+    
 
     ax = plt.axes()
-    ax.set_xlabel("Energy")
-    ax.set_ylabel("Acousticness")
+    ax.set_xlabel(headers[min_pair[0]])
+    ax.set_ylabel(headers[min_pair[1]])
 
-    centers, labels = find_clusters(X, 4)
+    col1 = song_data[:,min_pair[0]][1:]
+    col2 = song_data[:,min_pair[1]][1:]
+    X = np.column_stack((col1, col2)).astype(float)
+
+    centers, labels = find_clusters(X, 4, rseed)
+
     plt.scatter(X[:, 0], X[:, 1], c=labels, s=50, cmap='viridis')
     plt.show()
+
+    create_playlists.fill_playlists(labels, username, token)
